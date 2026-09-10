@@ -1,0 +1,213 @@
+# # services:
+
+# #   agente:
+# #     build: .
+# #     container_name: agente
+# #     ports:
+# #       - "8501:8501"
+# #     depends_on:
+# #       - ollama
+# #     environment:
+# #       - OLLAMA_BASE_URL=http://ollama:11434
+
+# #   ollama:
+# #     image: ollama/ollama:latest
+# #     container_name: ollama
+# #     ports:
+# #       - "11434:11434"
+# #     volumes:
+# #       - ollama_data:/root/.ollama
+
+# # volumes:
+# #   ollama_data:
+# # services:
+# #   agente:
+# #     build: .
+# #     container_name: agente
+# #     ports:
+# #       - "8501:8501"
+# #     depends_on:
+# #       - ollama
+# #       - postgres
+# #     environment:
+# #       - OLLAMA_BASE_URL=http://ollama:11434
+# #       - POSTGRES_HOST=postgres
+# #       - POSTGRES_PORT=5432
+# #       - POSTGRES_DB=agente
+# #       - POSTGRES_USER=agente
+# #       - POSTGRES_PASSWORD=agente123
+
+# #   ollama:
+# #     image: ollama/ollama:latest
+# #     container_name: ollama
+# #     ports:
+# #       - "11434:11434"
+# #     volumes:
+# #       - ollama_data:/root/.ollama
+
+# #   postgres:
+# #     image: postgres:16
+# #     container_name: postgres
+# #     environment:
+# #       POSTGRES_DB: agente
+# #       POSTGRES_USER: agente
+# #       POSTGRES_PASSWORD: agente123
+# #     volumes:
+# #       - postgres_data:/var/lib/postgresql/data
+
+# # volumes:
+# #   ollama_data:
+# #   postgres_data:
+# services:
+#   agente:
+#     build: .
+#     container_name: agente
+#     ports:
+#       - "8501:8501"
+
+#     extra_hosts:
+#       - "host.docker.internal:host-gateway"
+
+#     depends_on:
+#       - postgres
+#       - mysql
+
+#     environment:
+#       - OLLAMA_BASE_URL=http://host.docker.internal:11434
+#       - POSTGRES_HOST=postgres
+#       - POSTGRES_PORT=5432
+#       - POSTGRES_DB=agente
+#       - POSTGRES_USER=agente
+#       - POSTGRES_PASSWORD=agente123
+#       - MYSQL_HOST=mysql
+#       - MYSQL_PORT=3306
+#       - MYSQL_DATABASE=meu_banco
+#       - MYSQL_USER=agente
+#       - MYSQL_PASSWORD=agente123
+
+#   postgres:
+#     image: postgres:16
+#     container_name: postgres
+
+#     environment:
+#       POSTGRES_DB: agente
+#       POSTGRES_USER: agente
+#       POSTGRES_PASSWORD: agente123
+
+#     volumes:
+#       - postgres_data:/var/lib/postgresql/data
+
+#   mysql:
+#     image: mysql:8.4
+#     container_name: mysql
+
+#     environment:
+#       MYSQL_DATABASE: meu_banco
+#       MYSQL_USER: agente
+#       MYSQL_PASSWORD: agente123
+#       MYSQL_ROOT_PASSWORD: root123
+
+#     ports:
+#       - "3306:3306"
+
+#     volumes:
+#       - mysql_data:/var/lib/mysql
+
+# volumes:
+#   postgres_data:
+#   mysql_data:
+services:
+
+  agente:
+    build: .
+    container_name: agente
+    ports:
+      - "8501:8501"
+
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+    depends_on:
+      - api
+      - postgres
+      - mysql
+
+    environment:
+      - API_URL=http://api:8000
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=agente
+      - POSTGRES_USER=agente
+      - POSTGRES_PASSWORD=agente123
+      - MYSQL_HOST=mysql
+      - MYSQL_PORT=3306
+      - MYSQL_DATABASE=meu_banco
+      - MYSQL_USER=agente
+      - MYSQL_PASSWORD=agente123
+
+
+  api:
+    build: .
+    container_name: api
+    ports:
+      - "8000:8000"
+
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+
+    depends_on:
+      - postgres
+      - mysql
+
+    environment:
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
+      - POSTGRES_HOST=postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_DB=agente
+      - POSTGRES_USER=agente
+      - POSTGRES_PASSWORD=agente123
+      - MYSQL_HOST=mysql
+      - MYSQL_PORT=3306
+      - MYSQL_DATABASE=meu_banco
+      - MYSQL_USER=agente
+      - MYSQL_PASSWORD=agente123
+
+    volumes:
+      - rag_data:/app/chroma_db
+
+    command: uvicorn api:app --host 0.0.0.0 --port 8000
+  postgres:
+    image: postgres:16
+    container_name: postgres
+
+    environment:
+      POSTGRES_DB: agente
+      POSTGRES_USER: agente
+      POSTGRES_PASSWORD: agente123
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+
+  mysql:
+    image: mysql:8.4
+    container_name: mysql
+
+    environment:
+      MYSQL_DATABASE: meu_banco
+      MYSQL_USER: agente
+      MYSQL_PASSWORD: agente123
+      MYSQL_ROOT_PASSWORD: root123
+
+    ports:
+      - "3306:3306"
+
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+
+volumes:
+  postgres_data:
+  mysql_data:
+  rag_data:
